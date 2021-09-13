@@ -5,9 +5,28 @@
    [reagent.core :as reagent :refer [atom]]
    [reagent.dom :as rdom]))
 
-(println "This text is printed from src/gunhaver/checkures.cljs. Go ahead and edit it and see reloading in action.")
+(defn even-row
+  "turn even rows into html"
+  [i row]
+  (let [index (* i 2)]
+    (into [:tr {:row index}]
+          (interleave (repeat 4 [:td {:class :unplayable}])
+                      (map-indexed #(vec [:td (assoc {} :class %2 :row index :col %1)]) row)))))
 
-(defn multiply [a b] (* a b))
+(defn odd-row
+  "turn odd rows into html"
+  [i row]
+  (let [index (inc (* i 2))]
+    (into [:tr {:row index}]
+          (interleave (map-indexed #(vec [:td (assoc {} :class %2 :row index :col %1)]) row)
+                      (repeat 4 [:td {:class :unplayable}])))))
+
+(defn show-board
+  [board]
+  (into [:table]
+        (interleave
+         (map-indexed even-row (take-nth 2 board))
+         (map-indexed odd-row (take-nth 2 (rest board))))))
 
 ;; define your app data so that it doesn't get over-written on reload
 (defonce app-state (atom {:text "Hello world!"
@@ -20,7 +39,7 @@
   [:div
    [:h1 (:text @app-state)]
    [:h3 "Rock rock on!!!"]
-   (utils/show-board (:board @app-state))])
+   (show-board (:board @app-state))])
 
 (defn mount [el]
   (rdom/render [hello-world] el))

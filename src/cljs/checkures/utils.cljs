@@ -68,8 +68,20 @@
     #{[3 6] [3 7]}})
 
 (defn get-2d
-  [board row col]
+  [board col row]
   (get (get board row) col))
+
+(defn set-2d
+  [board col row v]
+  (let [old-row (get board row)]
+    (assoc board row (assoc old-row col v))))
+
+(defn move 
+  [board [from-col from-row] [to-col to-row]]
+  (let  [piece (get-2d board from-col from-row)]
+    (-> board 
+        (set-2d from-col from-row :none)
+        (set-2d to-col to-row piece))))
 
 (defn conn?
   "returns true if from is connected to to"
@@ -77,8 +89,8 @@
   (contains? adj #{from to}))
 
 (defn occupied?
-  [board row col]
-  (not= (get-2d board row col) :none))
+  [board col row]
+  (not= (get-2d board col row) :none))
 
 (defn get-dir
   ; TODO refactor to only take col?
@@ -95,41 +107,17 @@
     :black #{:down}
     #{:up :down}))
 
-
 (defn valid-move?
-  [board [from-row from-col] [to-row to-col]]
-  (let [from-piece (get-2d board from-row from-col)
-        to-piece (get-2d board to-row to-col)
-        dir (get-dir [from-row from-col] [to-row to-col])
+  [board [from-col from-row] [to-col to-row]]
+  (let [from-piece (get-2d board from-col from-row)
+        to-piece (get-2d board to-col to-row)
+        dir (get-dir [from-col from-row] [to-col to-row])
         valid-dirs (get-valid-dirs from-piece)
-        dist (- from-col to-col)]
-    (and 
-      (not= from-piece :none)
-      (= to-piece :none)
-      (conn? board [from-row from-col] [to-row to-col])
-      (contains? valid-dirs dir)
-      (or (= dist 1) (= dist -1)))))
-
-(defn even-row
-  "turn even rows into html"
-  [i row]
-  (let [index (* i 2)]
-  (into [:tr {:row index}]
-        (interleave (repeat 4 [:td {:class :unplayable}])
-                    (map-indexed #(vec [:td (assoc {} :class %2 :row index :col %1)]) row)))))
-(defn odd-row
-  "turn odd rows into html"
-  [i row]
-  (let [index (inc (* i 2))]
-  (into [:tr {:row index}]
-        (interleave (map-indexed #(vec [:td (assoc {} :class %2 :row index :col %1)]) row)
-                    (repeat 4 [:td {:class :unplayable}])))))
-
-(defn show-board
-  [board]
-  (into [:table]
-        (interleave
-         (map-indexed even-row (take-nth 2 board))
-         (map-indexed odd-row (take-nth 2 (rest board))))))
-
-;; TODO: fix the col/row x/y situation
+        dist (- from-row to-row)]
+    (println (str from-piece " " to-piece " " dir " " valid-dirs " " dist))
+    (and
+     (not= from-piece :none)
+     (= to-piece :none)
+     (conn? edges [from-col from-row] [to-col to-row]) ; TODO: keep as constant?
+     (contains? valid-dirs dir)
+     (or (= dist 1) (= dist -1)))))
