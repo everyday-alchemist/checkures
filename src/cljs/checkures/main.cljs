@@ -5,20 +5,51 @@
    [reagent.core :as reagent :refer [atom]]
    [reagent.dom :as rdom]))
 
+;; define your app data so that it doesn't get over-written on reload
+(defonce app-state (atom {:board utils/init-pos
+                          :selected nil}))
+
+;; TODO: this will need to account for whose turn it is once implemented
+(defn handle-click
+  [target]
+  (let [selected (get @app-state :selected)
+        board (get @app-state :board)]
+    (if selected
+      (if (utils/valid-move? board selected target)
+        (swap! app-state assoc
+               :board (utils/move board selected target)
+               :selected nil)
+        (do (js/alert (str "Invalid move " selected ":" target))
+            (swap! app-state dissoc :selected)))
+      (swap! app-state assoc :selected target))))
+
+;; TODO: *-row functions need to be refactored, this is a mess...
 (defn even-row
   "turn even rows into html"
   [i row]
   (let [index (* i 2)]
     (into [:tr {:row index}]
           (interleave (repeat 4 [:td {:class :unplayable}])
-                      (map-indexed #(vec [:td (assoc {} :class %2 :row index :col %1)]) row)))))
+                      (map-indexed (fn [col cl]
+                                     vec [:td (assoc {}
+                                                     :row index
+                                                     :col col
+                                                     :on-click #(handle-click [col index]))
+                                          [:div {:class cl}]])
+                                   row)))))
 
 (defn odd-row
   "turn odd rows into html"
   [i row]
   (let [index (inc (* i 2))]
     (into [:tr {:row index}]
-          (interleave (map-indexed #(vec [:td (assoc {} :class %2 :row index :col %1)]) row)
+          (interleave (map-indexed (fn [col cl]
+                                     vec [:td (assoc {}
+                                                     :row index
+                                                     :col col
+                                                     :on-click #(handle-click [col index]))
+                                          [:div {:class cl}]])
+                                   row)
                       (repeat 4 [:td {:class :unplayable}])))))
 
 (defn show-board
@@ -28,17 +59,12 @@
          (map-indexed even-row (take-nth 2 board))
          (map-indexed odd-row (take-nth 2 (rest board))))))
 
-;; define your app data so that it doesn't get over-written on reload
-(defonce app-state (atom {:text "Hello world!"
-                          :board utils/init-pos}))
-
 (defn get-app-element []
   (gdom/getElement "app"))
 
 (defn hello-world []
   [:div
-   [:h1 (:text @app-state)]
-   [:h3 "Rock rock on!!!"]
+   [:h1 "Checkures"]
    (show-board (:board @app-state))])
 
 (defn mount [el]
