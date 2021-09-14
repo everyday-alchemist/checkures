@@ -76,10 +76,10 @@
   (let [old-row (get board row)]
     (assoc board row (assoc old-row col v))))
 
-(defn move 
+(defn move
   [board [from-col from-row] [to-col to-row]]
   (let  [piece (get-2d board from-col from-row)]
-    (-> board 
+    (-> board
         (set-2d from-col from-row :none)
         (set-2d to-col to-row piece))))
 
