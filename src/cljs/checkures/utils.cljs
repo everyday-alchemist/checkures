@@ -1,5 +1,10 @@
 (ns checkures.utils)
 
+;; TODO: implement a function to calculate intermediate of 2 spaces
+;;       refactor move to use intermediate function
+;;       remove piece when it is jumped
+;;       implement kings
+
 (def init-pos
   [[:black :black :black :black]
    [:black :black :black :black]
@@ -107,17 +112,59 @@
     :black #{:down}
     #{:up :down}))
 
+;; need to refactor with a get-intermediate fn
 (defn valid-move?
   [board [from-col from-row] [to-col to-row]]
   (let [from-piece (get-2d board from-col from-row)
+        opp-color (if (= :red from-piece) :black :red)
         to-piece (get-2d board to-col to-row)
         dir (get-dir [from-col from-row] [to-col to-row])
         valid-dirs (get-valid-dirs from-piece)
-        dist (- from-row to-row)]
-    (println (str from-piece " " to-piece " " dir " " valid-dirs " " dist))
-    (and
-     (not= from-piece :none)
-     (= to-piece :none)
-     (conn? edges [from-col from-row] [to-col to-row]) ; TODO: keep as constant?
-     (contains? valid-dirs dir)
-     (or (= dist 1) (= dist -1)))))
+        dist-x (- from-col to-col)
+        dist-y (- from-row to-row)]
+    (cond 
+      (or (= dist-y 1) (= dist-y -1))
+      (and
+       (not= from-piece :none)
+       (= to-piece :none)
+       (conn? edges [from-col from-row] [to-col to-row]) ; TODO: keep as constant?
+       (contains? valid-dirs dir))
+      (or (= dist-y 2) (= dist-y -2))
+      (and
+       (not= from-piece :none)
+       (= to-piece :none)
+       (contains? valid-dirs dir)
+       (cond
+         (and (= dir :up) (> dist-x 0) (odd? from-row))
+         (and (conn? edges [from-col from-row] [(dec from-col) (dec from-row)])
+              (conn? edges [(dec from-col) (dec from-row)] [to-col to-row])
+              (= opp-color (get-2d board (dec from-col) (dec from-row))))
+         (and (= dir :up) (< dist-x 0) (odd? from-row))
+         (and (conn? edges [from-col from-row] [from-col (dec from-row)])
+              (conn? edges [from-col (dec from-row)] [to-col to-row])
+              (= opp-color (get-2d board from-col (dec from-row))))
+         (and (= dir :up) (> dist-x 0) (even? from-row))
+         (and (conn? edges [from-col from-row] [from-col (dec from-row)])
+              (conn? edges [from-col (dec from-row)] [to-col to-row])
+              (= opp-color (get-2d board from-col (dec from-row))))
+         (and (= dir :up) (< dist-x 0) (even? from-row))
+         (and (conn? edges [from-col from-row] [(inc from-col) (dec from-row)]) 
+              (conn? edges [(inc from-col) (dec from-row)] [to-col to-row])
+              (= opp-color (get-2d board (inc from-col) (dec from-row))))
+         (and (= dir :down) (> dist-x 0) (odd? from-row))
+         (and (conn? edges [from-col from-row] [(dec from-col) (inc from-row)])
+              (conn? edges [(dec from-col) (inc from-row)] [to-col to-row])
+              (= opp-color (get-2d board (dec from-col) (inc from-row))))
+         (and (= dir :down) (< dist-x 0) (odd? from-row))
+         (and (conn? edges [from-col from-row] [from-col (inc from-row)])
+              (conn? edges [from-col (inc from-row)] [to-col to-row])
+              (= opp-color (get-2d board from-col (inc from-row))))
+         (and (= dir :down) (> dist-x 0) (even? from-row))
+         (and (conn? edges [from-col from-row] [from-col (inc from-row)])
+              (conn? edges [from-col (inc from-row)] [to-col to-row])
+              (= opp-color (get-2d board from-col (inc from-row))))
+         (and (= dir :down) (< dist-x 0) (even? from-row))
+         (and (conn? edges [from-col from-row] [(inc from-col) (inc from-row)])
+              (conn? edges [(inc from-col) (inc from-row)] [to-col to-row])
+              (= opp-color (get-2d board (inc from-col) (inc from-row))))
+         :else nil)))))

@@ -5,6 +5,13 @@
    [reagent.core :as reagent :refer [atom]]
    [reagent.dom :as rdom]))
 
+;; TODO: implement buttons to execute/clear move
+;;       add movement indicators
+;;       allow multi-jump moves
+;;       add styling for kings
+;;       implement turns and win condition
+;;       general styling improvements
+
 ;; define your app data so that it doesn't get over-written on reload
 (defonce app-state (atom {:board utils/init-pos
                           :selected nil}))
