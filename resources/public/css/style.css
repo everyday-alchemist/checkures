@@ -1,2 +1,50 @@
-/* some style */
+html {
+  font-family: sans-serif;
+}
 
+table {
+  border-collapse: collapse;
+  border: 2px solid rgb(200,200,200);
+  letter-spacing: 1px;
+  font-size: 0.8rem;
+}
+
+td, th {
+  border: 1px solid rgb(190,190,190);
+  height: 128px;
+  width: 128px;
+}
+
+th {
+  background-color: rgb(235,235,235);
+}
+
+tr:nth-child(odd) td:nth-child(even) {
+  text-align: center;
+  background-color: rgb(0,0,0)
+}
+
+tr:nth-child(even) td:nth-child(odd) {
+  text-align: center;
+  background-color: rgb(0,0,0)
+}
+
+.red {
+  height: 80%;
+  width: 80%;
+  background-color: red;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.black {
+  height: 80%;
+  width: 80%;
+  background-color: white;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+caption {
+  padding: 10px;
+}
