@@ -8,7 +8,6 @@
 ;; TODO: implement buttons to execute/clear move
 ;;       add movement indicators
 ;;       allow multi-jump moves
-;;       add styling for kings
 ;;       implement turns and win condition
 ;;       general styling improvements
 
@@ -24,7 +23,8 @@
     (if selected
       (if (utils/valid-move? board selected target)
         (swap! app-state assoc
-               :board (utils/move board selected target)
+               :board (utils/king-me
+                       (utils/move board selected target))
                :selected nil)
         (do (js/alert (str "Invalid move " selected ":" target))
             (swap! app-state dissoc :selected)))
@@ -42,7 +42,10 @@
                                                      :row index
                                                      :col col
                                                      :on-click #(handle-click [col index]))
-                                          [:div {:class cl}]])
+                                          [:div {:class cl}
+                                           (when (or (= cl :red-king)
+                                                     (= cl :black-king))
+                                             [:p "♛"])]])
                                    row)))))
 
 (defn odd-row
@@ -55,7 +58,10 @@
                                                      :row index
                                                      :col col
                                                      :on-click #(handle-click [col index]))
-                                          [:div {:class cl}]])
+                                          [:div {:class cl}
+                                           (when (or (= cl :red-king)
+                                                     (= cl :black-king))
+                                             [:p "♛"])]])
                                    row)
                       (repeat 4 [:td {:class :unplayable}])))))
 
