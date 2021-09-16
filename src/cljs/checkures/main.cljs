@@ -5,41 +5,66 @@
    [reagent.core :as reagent :refer [atom]]
    [reagent.dom :as rdom]))
 
-;; TODO: implement buttons to execute/clear move
-;;       add movement indicators
-;;         [ ] unselect all squares after trying to move
-;;       allow multi-jump moves
-;;       implement turns and win condition
-;;       general styling improvements
+;; TODO: implement win condition
+;;       timer
+;;       key listener
+;;       reset game
+;;       undo move
+;;       remove fig-wheel defaults
+;;       2 player
+;;       server
+;;       piece counter
 
-;; define your app data so that it doesn't get over-written on reload
-(defonce app-state (atom {:board utils/init-pos
-                          :selected nil}))
+(defonce app-state (atom {:turn :black
+                          :board utils/init-pos
+                          :selected []}))
 
 (defn make-id
   [col row]
   (str col "-" row))
 
-;; TODO: this will need to account for whose turn it is once implemented
-(defn handle-click
+(defn set-class
+  [[col row] cl]
+  (let [el (gdom/getElement (make-id col row))]
+    (gdom/setProperties el (js-obj "class" cl))))
+
+(defn make-selection
   [target]
-  (let [selected (get @app-state :selected)
-        board (get @app-state :board)
-        el (gdom/getElement (make-id (target 0) (target 1)))]
-    (if selected
-      (if (utils/valid-move? board selected target)
+  (let [sel (:selected @app-state)]
+    (swap! app-state assoc :selected (conj sel target))
+    (set-class target "selected")))
+
+(defn undo-selection
+  []
+  (let [sel (:selected @app-state)]
+    (when (> (count sel) 0)
+      (set-class (peek sel) "unselected")
+      (swap! app-state assoc :selected (pop sel)))))
+
+(defn clear-selections
+  []
+  (let [sel (:selected @app-state)]
+    (run! #(set-class % "unselected") sel)
+    (swap! app-state assoc :selected [])))
+
+(defn exec-move
+  []
+  (let [board (@app-state :board)
+        selected (@app-state :selected)
+        turn (@app-state :turn)]
+    (if (utils/valid-turn? board selected turn)
+      (do
+        (println "turn is valid")
         (swap! app-state assoc
                :board (utils/king-me
-                       (utils/move board selected target))
-               :selected nil)
-        (do (js/alert (str "Invalid move " selected ":" target))
-            (swap! app-state dissoc :selected)))
-      (do (swap! app-state assoc :selected target)
-          (gdom/setProperties el (js-obj "class" "selected"))))))
+                       (utils/make-moves board selected)))
+        (swap! app-state assoc :turn (if (= turn :red) :black :red))
+        (clear-selections))
+      (do
+        (js/alert (str "Invalid turn " selected))
+        (clear-selections)))))
 
 ;; TODO: *-row functions need to be refactored, this is a mess...
-
-
 (defn even-row
   "turn even rows into html"
   [i row]
@@ -51,7 +76,7 @@
                                                :class "unselected"
                                                :col col
                                                :row index
-                                               :on-click #(handle-click [col index])}
+                                               :on-click #(make-selection [col index])}
                                           [:div {:class cl}
                                            (when (or (= cl :red-king)
                                                      (= cl :black-king))
@@ -68,7 +93,7 @@
                                                :class "unselected"
                                                :col col
                                                :row index
-                                               :on-click #(handle-click [col index])}
+                                               :on-click #(make-selection [col index])}
                                           [:div {:class cl}
                                            (when (or (= cl :red-king)
                                                      (= cl :black-king))
@@ -89,6 +114,10 @@
 (defn hello-world []
   [:div
    [:h1 "Checkures"]
+   [:p (str "It is " (if (= (:turn @app-state) :black) "black's" "red's") " turn!")]
+   [:button {:on-click #(undo-selection)} "undo"]
+   [:button {:on-click #(clear-selections)} "clear"]
+   [:button {:on-click #(exec-move)} "execute move"]
    (show-board (:board @app-state))])
 
 (defn mount [el]

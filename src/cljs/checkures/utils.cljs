@@ -102,10 +102,6 @@
   [adj from to]
   (contains? adj #{from to}))
 
-(defn occupied?
-  [board col row]
-  (not= (get-2d board col row) :none))
-
 (defn get-dir
   ; TODO refactor to only take col?
   "returns the direction of a move from arg1 to arg2"
@@ -137,6 +133,17 @@
           (set-2d (intermediate 0) (intermediate 1) :none)
           (set-2d to-col to-row piece)))))
 
+(defn make-moves
+  [board moves]
+  (if (= (count moves) 2)
+    (move board (moves 0) (moves 1))
+    (let [zipped (map (fn [a b] [a b]) (pop moves) (rest moves))]
+      (loop [b board
+             m zipped]
+        (if m
+          (recur (move b ((first m) 0) ((first m) 1)) (next m))
+          b)))))
+
 (defn king-me
   [board]
   (-> board
@@ -145,30 +152,47 @@
 
 (defn valid-move?
   [board [from-col from-row] [to-col to-row]]
-  (println (str [from-col from-row] ":" [to-col to-row]))
   (let [from-piece (get-2d board from-col from-row)
-        opp-color (if (or (= :red from-piece) (= :red-king from-piece)) #{:black :black-king}
-                      #{:red :red-king})
         to-piece (get-2d board to-col to-row)
         dir (get-dir [from-col from-row] [to-col to-row])
         valid-dirs (get-valid-dirs from-piece)
+        dist-y (- from-row to-row)]
+    (and
+     (or (= dist-y 1) (= dist-y -1))
+     (not= from-piece :none)
+     (= to-piece :none)
+     (conn? edges [from-col from-row] [to-col to-row]) ; TODO: keep as constant?
+     (contains? valid-dirs dir))))
+
+(defn valid-jump?
+  [board [from-col from-row] [to-col to-row] og-piece]
+  (let [opp-color (if (or (= :red og-piece) (= :red-king og-piece))
+                    #{:black :black-king}
+                    #{:red :red-king})
+        to-piece (get-2d board to-col to-row)
+        dir (get-dir [from-col from-row] [to-col to-row])
+        valid-dirs (get-valid-dirs og-piece)
         dist-x (- from-col to-col)
         dist-y (- from-row to-row)
         intermediate (get-intermediate [from-col from-row] dir dist-x)
         int-piece (if intermediate (get-2d board (intermediate 0) (intermediate 1)) :none)]
-    (cond
-      (or (= dist-y 1) (= dist-y -1))
-      (and
-       (not= from-piece :none)
-       (= to-piece :none)
-       (conn? edges [from-col from-row] [to-col to-row]) ; TODO: keep as constant?
-       (contains? valid-dirs dir))
-      (or (= dist-y 2) (= dist-y -2))
-      (and
-       (not= from-piece :none)
-       (= to-piece :none)
-       (contains? valid-dirs dir)
-       (conn? edges [from-col from-row] intermediate)
-       (conn? edges intermediate [to-col to-row])
-       (contains? opp-color int-piece)))))
+    (and
+     (or (= dist-y 2) (= dist-y -2))
+     (= to-piece :none)
+     (contains? opp-color int-piece)
+     (contains? valid-dirs dir)
+     (conn? edges [from-col from-row] intermediate)
+     (conn? edges intermediate [to-col to-row]))))
 
+(defn valid-turn?
+  [board moves player]
+  (when (> (count moves) 1)
+    (let [[col1 row1] (first moves)
+          [col2 row2] (fnext moves)
+          dist-y (- row1 row2)
+          first-piece (get-2d board col1 row1)
+          valid-colors (if (= player :red) #{:red :red-king} #{:black :black-king})]
+      (when (contains? valid-colors first-piece)
+        (if (and (= (count moves) 2) (or (= dist-y 1) (= dist-y -1)))
+          (valid-move? board [col1 row1] [col2 row2])
+          (every? true? (map #(valid-jump? board %1 %2 first-piece) (pop moves) (rest moves))))))))
