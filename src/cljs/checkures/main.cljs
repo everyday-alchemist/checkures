@@ -7,6 +7,7 @@
 
 ;; TODO: implement buttons to execute/clear move
 ;;       add movement indicators
+;;         [ ] unselect all squares after trying to move
 ;;       allow multi-jump moves
 ;;       implement turns and win condition
 ;;       general styling improvements
@@ -15,11 +16,16 @@
 (defonce app-state (atom {:board utils/init-pos
                           :selected nil}))
 
+(defn make-id
+  [col row]
+  (str col "-" row))
+
 ;; TODO: this will need to account for whose turn it is once implemented
 (defn handle-click
   [target]
   (let [selected (get @app-state :selected)
-        board (get @app-state :board)]
+        board (get @app-state :board)
+        el (gdom/getElement (make-id (target 0) (target 1)))]
     (if selected
       (if (utils/valid-move? board selected target)
         (swap! app-state assoc
@@ -28,9 +34,12 @@
                :selected nil)
         (do (js/alert (str "Invalid move " selected ":" target))
             (swap! app-state dissoc :selected)))
-      (swap! app-state assoc :selected target))))
+      (do (swap! app-state assoc :selected target)
+          (gdom/setProperties el (js-obj "class" "selected"))))))
 
 ;; TODO: *-row functions need to be refactored, this is a mess...
+
+
 (defn even-row
   "turn even rows into html"
   [i row]
@@ -38,10 +47,11 @@
     (into [:tr {:row index}]
           (interleave (repeat 4 [:td {:class :unplayable}])
                       (map-indexed (fn [col cl]
-                                     vec [:td (assoc {}
-                                                     :row index
-                                                     :col col
-                                                     :on-click #(handle-click [col index]))
+                                     vec [:td {:id (make-id col index)
+                                               :class "unselected"
+                                               :col col
+                                               :row index
+                                               :on-click #(handle-click [col index])}
                                           [:div {:class cl}
                                            (when (or (= cl :red-king)
                                                      (= cl :black-king))
@@ -54,10 +64,11 @@
   (let [index (inc (* i 2))]
     (into [:tr {:row index}]
           (interleave (map-indexed (fn [col cl]
-                                     vec [:td (assoc {}
-                                                     :row index
-                                                     :col col
-                                                     :on-click #(handle-click [col index]))
+                                     vec [:td {:id (make-id col index)
+                                               :class "unselected"
+                                               :col col
+                                               :row index
+                                               :on-click #(handle-click [col index])}
                                           [:div {:class cl}
                                            (when (or (= cl :red-king)
                                                      (= cl :black-king))

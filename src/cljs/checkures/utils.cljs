@@ -147,8 +147,8 @@
   [board [from-col from-row] [to-col to-row]]
   (println (str [from-col from-row] ":" [to-col to-row]))
   (let [from-piece (get-2d board from-col from-row)
-        opp-color (if (or (= :red from-piece) (= :red-king from-piece)) #{:black :black-king} 
-                                                                        #{:red :red-king})
+        opp-color (if (or (= :red from-piece) (= :red-king from-piece)) #{:black :black-king}
+                      #{:red :red-king})
         to-piece (get-2d board to-col to-row)
         dir (get-dir [from-col from-row] [to-col to-row])
         valid-dirs (get-valid-dirs from-piece)
