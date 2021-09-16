@@ -1,9 +1,9 @@
 (ns checkures.utils)
 
 (def init-pos
-  [[:black :black :black :black]
-   [:black :black :black :black]
-   [:black :black :black :black]
+  [[:white :white :white :white]
+   [:white :white :white :white]
+   [:white :white :white :white]
    [:none :none :none :none]
    [:none :none :none :none]
    [:red :red :red :red]
@@ -114,7 +114,7 @@
   [piece]
   (case piece
     :red #{:up}
-    :black #{:down}
+    :white #{:down}
     #{:up :down}))
 
 (defn move
@@ -148,7 +148,7 @@
   [board]
   (-> board
       (assoc 0 (into [] (map #(if (= % :red) :red-king %) (get board 0))))
-      (assoc 7 (into [] (map #(if (= % :black) :black-king %) (get board 7))))))
+      (assoc 7 (into [] (map #(if (= % :white) :white-king %) (get board 7))))))
 
 (defn valid-move?
   [board [from-col from-row] [to-col to-row]]
@@ -167,7 +167,7 @@
 (defn valid-jump?
   [board [from-col from-row] [to-col to-row] og-piece]
   (let [opp-color (if (or (= :red og-piece) (= :red-king og-piece))
-                    #{:black :black-king}
+                    #{:white :white-king}
                     #{:red :red-king})
         to-piece (get-2d board to-col to-row)
         dir (get-dir [from-col from-row] [to-col to-row])
@@ -191,7 +191,7 @@
           [col2 row2] (fnext moves)
           dist-y (- row1 row2)
           first-piece (get-2d board col1 row1)
-          valid-colors (if (= player :red) #{:red :red-king} #{:black :black-king})]
+          valid-colors (if (= player :red) #{:red :red-king} #{:white :white-king})]
       (when (contains? valid-colors first-piece)
         (if (and (= (count moves) 2) (or (= dist-y 1) (= dist-y -1)))
           (valid-move? board [col1 row1] [col2 row2])

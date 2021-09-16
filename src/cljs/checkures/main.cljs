@@ -15,7 +15,7 @@
 ;;       server
 ;;       piece counter
 
-(defonce app-state (atom {:turn :black
+(defonce app-state (atom {:turn :white
                           :board utils/init-pos
                           :selected []}))
 
@@ -58,7 +58,7 @@
         (swap! app-state assoc
                :board (utils/king-me
                        (utils/make-moves board selected)))
-        (swap! app-state assoc :turn (if (= turn :red) :black :red))
+        (swap! app-state assoc :turn (if (= turn :red) :white :red))
         (clear-selections))
       (do
         (js/alert (str "Invalid turn " selected))
@@ -79,7 +79,7 @@
                                                :on-click #(make-selection [col index])}
                                           [:div {:class cl}
                                            (when (or (= cl :red-king)
-                                                     (= cl :black-king))
+                                                     (= cl :white-king))
                                              [:p "♛"])]])
                                    row)))))
 
@@ -96,7 +96,7 @@
                                                :on-click #(make-selection [col index])}
                                           [:div {:class cl}
                                            (when (or (= cl :red-king)
-                                                     (= cl :black-king))
+                                                     (= cl :white-king))
                                              [:p "♛"])]])
                                    row)
                       (repeat 4 [:td {:class :unplayable}])))))
@@ -114,7 +114,7 @@
 (defn hello-world []
   [:div
    [:h1 "Checkures"]
-   [:p (str "It is " (if (= (:turn @app-state) :black) "black's" "red's") " turn!")]
+   [:p (str "It is " (if (= (:turn @app-state) :white) "white's" "red's") " turn!")]
    [:button {:on-click #(undo-selection)} "undo"]
    [:button {:on-click #(clear-selections)} "clear"]
    [:button {:on-click #(exec-move)} "execute move"]

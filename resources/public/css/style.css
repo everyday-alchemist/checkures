@@ -53,7 +53,7 @@ td, th {
 }
 
 
-.black {
+.white {
   height: 80%;
   width: 80%;
   background-color: white;
@@ -61,7 +61,7 @@ td, th {
   display: inline-block;
 }
 
-.black-king {
+.white-king {
   height: 80%;
   width: 80%;
   font-size: 32px;
