@@ -31,8 +31,9 @@
 (defn make-selection
   [target]
   (let [sel (:selected @app-state)]
-    (swap! app-state assoc :selected (conj sel target))
-    (set-class target "selected")))
+    (when (not (contains? (set sel) target)) 
+      (swap! app-state assoc :selected (conj sel target)))
+      (set-class target "selected")))
 
 (defn undo-selection
   []
