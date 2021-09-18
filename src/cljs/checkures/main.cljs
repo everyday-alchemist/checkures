@@ -54,7 +54,6 @@
         turn (@app-state :turn)]
     (if (utils/valid-turn? board selected turn)
       (do
-        (println "turn is valid")
         (swap! app-state assoc
                :board (utils/king-me
                        (utils/make-moves board selected)))
